@@ -1,0 +1,46 @@
+name: Test xMatters Self Service Onboarding
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  onboarding:
+    runs-on: onprem-linux
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner.
+
+      - name: Set Node.js version 12.x
+        uses: actions/setup-node@v1
+        with:
+         node-version: '12.x'
+
+      - name: Install Axios
+        run: npm install axios
+
+      - name: Install Nodemailer
+        run: npm install nodemailer
+
+      - name: execute node script
+        run: |
+          node $GITHUB_WORKSPACE/Scripts/ac_onboarding.js > script_results.out
+          output2="$(cat script_results.out)"
+          output2="${output2//'%'/'%25'}"
+          output2="${output2//$'\n'/'%0A'}"
+          output2="${output2//$'\r'/'%0D'}"
+          echo $output2
+          echo "##[set-output name=scriptoutput2;]$output2"
+        
+        shell: bash
+        id: run_script2
+        env: # Or as an environment variable
+          DRAAUTHTOKEN: ${{ secrets.DRAAUTHTOKEN }}
+          DRA_URL: ${{ secrets.DRA_URL }}
+          XMATTERSBASEURI: ${{ secrets.XMATTERSBASEURI }}
+          XMBEARERTOKEN: ${{ secrets.XMBEARERTOKEN }}
+
+      - run: |
+          echo "Github action  ${{ github.event.action}}"
+          echo "Github comment body  ${{ github.event.comment.body}}"        
+  
